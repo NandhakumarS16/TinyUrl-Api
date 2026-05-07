@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="TinyUrl.API/TinyUrl.API.csproj" />
+  <Project Path="TinyUrl.Application/TinyUrl.Application.csproj" />
+  <Project Path="TinyUrl.Domain/TinyUrl.Domain.csproj" />
+  <Project Path="TinyUrl.Infrastructure/TinyUrl.Infrastructure.csproj" />
+</Solution>
