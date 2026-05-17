@@ -1,5 +1,3 @@
-using TinyUrl.API.Endpoints;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure services

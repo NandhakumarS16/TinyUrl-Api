@@ -1,4 +1,4 @@
-﻿using TinyUrl.Application.DTOs;
+﻿using TinyUrl.Application.DTOs.TinyUrlDto;
 
 namespace TinyUrl.Application.Interfaces.Services;
 
