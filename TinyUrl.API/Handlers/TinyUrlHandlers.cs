@@ -26,6 +26,12 @@ public static class TinyUrlHandlers
             return Results.BadRequest(
                 ApiResponse<string>.Fail("URL is required."));
 
+        if (!Uri.TryCreate(dto.Url, UriKind.Absolute, out _))
+        {
+            return Results.BadRequest(
+                ApiResponse<string>.Fail("Invalid URL format."));
+        }
+
         var baseUrl = $"{ctx.Request.Scheme}://{ctx.Request.Host}";
 
         var result = await service.AddAsync(dto, baseUrl);

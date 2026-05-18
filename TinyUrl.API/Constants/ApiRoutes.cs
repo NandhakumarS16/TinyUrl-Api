@@ -16,5 +16,5 @@ public static class ApiRoutes
     public const string Update = "/api/update/{code}";
 
     // Catch-all redirect route
-    public const string Redirect = "/{code}";
+    public const string Redirect = "/r/{code}";
 }

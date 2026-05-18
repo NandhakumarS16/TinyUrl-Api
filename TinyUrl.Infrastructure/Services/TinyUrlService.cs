@@ -1,7 +1,7 @@
 ﻿using TinyUrl.Application.DTOs.TinyUrlDto;
 using TinyUrl.Application.Interfaces.Repositories;
 using TinyUrl.Application.Interfaces.Services;
-
+using System.Security.Cryptography;
 using TinyUrl.Domain.Entities;
 
 /// <summary>
@@ -13,34 +13,35 @@ public class TinyUrlService : ITinyUrlService
 
     /// <summary>
     /// Characters used for short code generation.
+    /// 62 alphanumeric characters → 62^6 combinations
     /// </summary>
-    // 62 alphanumeric characters → 62^6 = ~56 billion combinations
     private const string Chars =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
     /// <summary>
     /// Initializes a new instance of the <see cref="TinyUrlService"/> class.
     /// </summary>
-    /// <param name="repo">Tiny URL repository.</param>
     public TinyUrlService(ITinyUrlRepository repo)
     {
         _repo = repo;
     }
 
     /// <summary>
-    /// Generates a unique 6-character short code.
+    /// Generates a unique 6-character short code using cryptographically secure randomness.
     /// </summary>
-    /// <returns>A unique short code.</returns>
     private async Task<string> GenerateUniqueCodeAsync()
     {
         string code;
-        var random = new Random();
 
         do
         {
             code = new string(
                 Enumerable.Range(0, 6)
-                    .Select(_ => Chars[random.Next(Chars.Length)])
+                    .Select(_ =>
+                    {
+                        int index = RandomNumberGenerator.GetInt32(Chars.Length);
+                        return Chars[index];
+                    })
                     .ToArray());
         }
         while (await _repo.CodeExistsAsync(code));
@@ -49,11 +50,8 @@ public class TinyUrlService : ITinyUrlService
     }
 
     /// <summary>
-    /// Maps an entity to a response DTO.
+    /// Maps entity to response DTO.
     /// </summary>
-    /// <param name="entity">Tiny URL entity.</param>
-    /// <param name="baseUrl">Application base URL.</param>
-    /// <returns>Mapped response DTO.</returns>
     private static TinyUrlResponseDto MapToDto(
         TinyUrlEntity entity,
         string baseUrl)
@@ -63,7 +61,7 @@ public class TinyUrlService : ITinyUrlService
             Id = entity.Id,
             OriginalUrl = entity.OriginalUrl,
             ShortCode = entity.ShortCode,
-            ShortUrl = $"{baseUrl}/{entity.ShortCode}",
+            ShortUrl = $"{baseUrl}/r/{entity.ShortCode}",
             IsPrivate = entity.IsPrivate,
             Clicks = entity.Clicks,
             CreatedAt = entity.CreatedAt
@@ -73,9 +71,6 @@ public class TinyUrlService : ITinyUrlService
     /// <summary>
     /// Creates a new short URL.
     /// </summary>
-    /// <param name="dto">URL request data.</param>
-    /// <param name="baseUrl">Application base URL.</param>
-    /// <returns>Created short URL details.</returns>
     public async Task<TinyUrlResponseDto> AddAsync(
         TinyUrlAddDto dto,
         string baseUrl)
@@ -105,9 +100,6 @@ public class TinyUrlService : ITinyUrlService
     /// <summary>
     /// Gets all public short URLs.
     /// </summary>
-    /// <param name="search">Optional search keyword.</param>
-    /// <param name="baseUrl">Application base URL.</param>
-    /// <returns>List of public short URLs.</returns>
     public async Task<List<TinyUrlResponseDto>> GetPublicAsync(
         string? search,
         string baseUrl)
@@ -129,10 +121,6 @@ public class TinyUrlService : ITinyUrlService
     /// <summary>
     /// Updates an existing short URL.
     /// </summary>
-    /// <param name="code">Short URL code.</param>
-    /// <param name="dto">Updated URL data.</param>
-    /// <param name="baseUrl">Application base URL.</param>
-    /// <returns>Updated short URL details if found.</returns>
     public async Task<TinyUrlResponseDto?> UpdateAsync(
         string code,
         TinyUrlUpdateDto dto,
@@ -158,8 +146,6 @@ public class TinyUrlService : ITinyUrlService
     /// <summary>
     /// Deletes a short URL by code.
     /// </summary>
-    /// <param name="code">Short URL code.</param>
-    /// <returns>True if deleted; otherwise false.</returns>
     public async Task<bool> DeleteAsync(string code)
     {
         try
@@ -188,10 +174,8 @@ public class TinyUrlService : ITinyUrlService
     }
 
     /// <summary>
-    /// Gets the original URL from a short code.
+    /// Gets original URL from short code.
     /// </summary>
-    /// <param name="code">Short URL code.</param>
-    /// <returns>The original URL if found.</returns>
     public async Task<string?> GetOriginalUrlAsync(string code)
     {
         try
